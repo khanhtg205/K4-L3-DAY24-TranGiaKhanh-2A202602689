@@ -2,9 +2,9 @@
 
 | Nguồn / yêu cầu | Control đã làm | Evidence file:dòng | Giới hạn |
 |---|---|---|---|
-| Luật 91/2025/QH15 | | | |
-| NĐ 356/2025/NĐ-CP | | | |
-| Luật AI 134/2025/QH15 | | | |
-| OWASP ASI01, ASI03, ASI04 | | | |
+| Luật 91/2025/QH15 (Bảo vệ dữ liệu cá nhân) | Phát hiện và che giấu PII (CCCD, SĐT, STK, Email); kiểm soát truy cập dữ liệu cá nhân theo nguyên tắc quyền tối thiểu (OBO). | `agent/pii.py:16-56` (detect), `agent/pii.py:59-86` (redact), `agent/policy.py:55-87` (phân quyền OBO) | Dùng regex trên dữ liệu tổng hợp (synthetic); điều khoản văn bản gốc: chưa xác minh số điều cụ thể, mô phỏng kỹ thuật không thay thế tuân thủ pháp lý chính thức. |
+| NĐ 356/2025/NĐ-CP (Biện pháp bảo vệ & xử phạt) | Biện pháp kỹ thuật ngăn chặn rò rỉ và truyền đưa dữ liệu cá nhân trái phép ra môi trường ngoài qua kênh egress. | `agent/policy.py:46-48` (rule cấm restricted + egress), `agent/runner.py:101-120` (chặn http_post), `reports/ledger.jsonl:23` | Chỉ chặn trên cổng localhost sink trong môi trường lab; chưa bao gồm các biện pháp quản trị hành chính tổ chức thực tế. |
+| Luật AI 134/2025/QH15 (Trí tuệ nhân tạo) | Trách nhiệm giải trình và lưu vết kiểm toán: ghi nhật ký mọi quyết định của Agent vào Hash Chain tamper-evident, gắn định danh ủy quyền (`on_behalf_of`, `run_id`, `expires_at`). | `agent/ledger.py:13-44` (append hash chain), `agent/ledger.py:47-97` (verify tính toàn vẹn), `agent/runner.py:34-48` (ghi nhận ledger) | Hash chain cục bộ trong 1 file JSONL phát hiện sửa đổi trong chuỗi nhưng không phát hiện cắt đuôi file nếu thiếu mốc tin cậy bên ngoài (timestamp authority). |
+| OWASP ASI01, ASI03, ASI04 (Agentic AI) | **ASI01 (Prompt Injection):** Trifecta Split tách Run A/Run B, chỉ nhận ID số từ tên file.<br>**ASI03 (Insecure Egress):** PEP chặn `http_post` dữ liệu `restricted`.<br>**ASI04 (Excessive Agency):** OBO giới hạn quyền Agent theo vai trò (`support_l1` vs `dpo`). | `agent/runner.py:64-98` (Trifecta Split - ASI01)<br>`agent/policy.py:46-48` & `agent/runner.py:101-120` (PEP Egress - ASI03)<br>`agent/policy.py:55-87` (OBO Scopes - ASI04) | Đánh giá trên môi trường Mock LLM deterministic; môi trường thật cần kết hợp cơ chế kiểm thực token thực tế (OAuth2/OIDC) và runtime guardrails. |
 
 Chỉ ghi điều khoản cụ thể khi đã đối chiếu văn bản gốc. Mô phỏng kỹ thuật không tự chứng minh tuân thủ pháp luật.
